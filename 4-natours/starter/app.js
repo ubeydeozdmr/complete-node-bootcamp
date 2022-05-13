@@ -21,7 +21,9 @@ app.use((req, res, next) => {
 
 // ? 2) ROUTE HANDLERS
 const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
+  fs.readFileSync(
+    `${__dirname}/dev-data/data/tours-simple.json`
+  )
 );
 
 const getAllTours = (req, res) => {
@@ -63,7 +65,12 @@ const createTour = (req, res) => {
   // console.log(req.body);
 
   const newId = tours[tours.length - 1].id + 1;
-  const newTour = Object.assign({ id: newId }, req.body);
+  const newTour = Object.assign(
+    {
+      id: newId,
+    },
+    req.body
+  );
 
   tours.push(newTour);
 
@@ -147,30 +154,33 @@ const deleteUser = (req, res) => {
 };
 
 // ? 3) ROUTES
-// prettier-ignore
-app
-  .route('/api/v1/tours')
-  .get(getAllTours)
-  .post(createTour)
+const tourRouter = express.Router();
+const userRouter = express.Router();
 
-app
-  .route('/api/v1/tours/:id')
+app.use('/api/v1/tours', tourRouter);
+app.use('/api/v1/users', userRouter);
+
+tourRouter
+  .route('/')
+  .get(getAllTours)
+  .post(createTour);
+
+tourRouter
+  .route('/:id')
   .get(getTour)
   .patch(updateTour)
   .delete(deleteTour);
 
-// prettier-ignore
-app
-.route('/api/v1/users')
-.get(getAllUsers)
-.post(createUser)
+userRouter
+  .route('/')
+  .get(getAllUsers)
+  .post(createUser);
 
-// prettier-ignore
-app
-  .route('api/v1/users/:id')
+userRouter
+  .route('/:id')
   .get(getUser)
   .patch(updateUser)
-  .delete(deleteUser)
+  .delete(deleteUser);
 
 // ? 4) START SERVER
 const port = 3000;
