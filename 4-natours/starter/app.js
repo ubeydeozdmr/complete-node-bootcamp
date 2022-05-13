@@ -37,7 +37,7 @@ app.post('/api/v1/tours', (req, res) => {
 
   tours.push(newTour);
 
-  fs.readFile(
+  fs.writeFile(
     `${__dirname}/dev-data/data/tours-simple.json`,
     JSON.stringify(tours),
     err => {
