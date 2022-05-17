@@ -33,6 +33,18 @@ exports.getAllTours = async (req, res) => {
       query = query.select('-__v');
     }
 
+    // 4) Pagination
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      const numTours = await Tour.countDocuments();
+      if (skip >= numTours) throw new Error('This page does not exist');
+    }
+
     // const tours = await Tour.find(req.query);
 
     // const tours = await Tour.find({
@@ -48,6 +60,7 @@ exports.getAllTours = async (req, res) => {
 
     // EXECUTE QUERY
     const tours = await query;
+    // query.sort().select().skip().limit()
 
     // SEND RESPONSE
     res.status(200).json({
