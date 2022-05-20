@@ -22,7 +22,6 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   // SEND RESPONSE
   res.status(200).json({
     status: 'success',
-    requestedAt: req.requestTime,
     results: tours.length,
     data: {
       tours
@@ -35,7 +34,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
   // Tour.findOne({ _id: req.params.id })
 
   if (!tour) {
-    return next(new AppError('No tour found with that ID'), 404);
+    return next(new AppError('No tour found with that ID', 404));
   }
 
   res.status(200).json({
@@ -64,7 +63,7 @@ exports.updateTour = catchAsync(async (req, res, next) => {
   });
 
   if (!tour) {
-    return next(new AppError('No tour found with that ID'), 404);
+    return next(new AppError('No tour found with that ID', 404));
   }
 
   res.status(200).json({
@@ -79,7 +78,7 @@ exports.deleteTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findByIdAndDelete(req.params.id);
 
   if (!tour) {
-    return next(new AppError('No tour found with that ID'), 404);
+    return next(new AppError('No tour found with that ID', 404));
   }
 
   res.status(204).json({
@@ -107,7 +106,7 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
     {
       $sort: { avgPrice: 1 }
     }
-    // ,{
+    // {
     //   $match: { _id: { $ne: 'EASY' } }
     // }
   ]);
