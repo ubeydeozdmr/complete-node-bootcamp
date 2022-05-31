@@ -1,10 +1,10 @@
 const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
-const sendEmail = require('../utils/email');
+const User = require('./../models/userModel');
+const catchAsync = require('./../utils/catchAsync');
+const AppError = require('./../utils/appError');
+const sendEmail = require('./../utils/email');
 
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -35,13 +35,13 @@ const createSendToken = (user, statusCode, res) => {
     }
   });
 };
+
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
-    passwordChangedAt: req.body.passwordChangedAt
+    passwordConfirm: req.body.passwordConfirm
   });
 
   createSendToken(newUser, 201, res);
@@ -54,15 +54,14 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!email || !password) {
     return next(new AppError('Please provide email and password!', 400));
   }
-
-  // 2) Check if user exist && password is correct
+  // 2) Check if user exists && password is correct
   const user = await User.findOne({ email }).select('+password');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  // 3) If everything is OK, send token to client
+  // 3) If everything ok, send token to client
   createSendToken(user, 200, res);
 });
 
@@ -90,7 +89,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   if (!currentUser) {
     return next(
       new AppError(
-        'The user belonging to this token does no longer exists.',
+        'The user belonging to this token does no longer exist.',
         401
       )
     );
@@ -124,8 +123,9 @@ exports.restrictTo = (...roles) => {
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
-  if (!user)
+  if (!user) {
     return next(new AppError('There is no user with email address.', 404));
+  }
 
   // 2) Generate the random reset token
   const resetToken = user.createPasswordResetToken();
@@ -136,8 +136,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     'host'
   )}/api/v1/users/resetPassword/${resetToken}`;
 
-  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.
-  \nIf you didn't forget your password, please ignore this email!`;
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
 
   try {
     await sendEmail({
@@ -156,10 +155,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     return next(
-      new AppError(
-        'There was an error sending the email. Try again later!',
-        500
-      )
+      new AppError('There was an error sending the email. Try again later!'),
+      500
     );
   }
 });
@@ -187,7 +184,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   // 3) Update changedPasswordAt property for the user
-
   // 4) Log the user in, send JWT
   createSendToken(user, 200, res);
 });
@@ -205,7 +201,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   await user.save();
-  // User.findByIdAndUpdate will NOT work as intended!;
+  // User.findByIdAndUpdate will NOT work as intended!
 
   // 4) Log user in, send JWT
   createSendToken(user, 200, res);
