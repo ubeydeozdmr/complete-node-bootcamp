@@ -14,7 +14,6 @@ const factory = require('./handlerFactory');
 //     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
 //   }
 // });
-
 const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
@@ -29,8 +28,6 @@ const upload = multer({
   storage: multerStorage,
   fileFilter: multerFilter
 });
-
-// const upload = multer({ dest: 'public/img/users' });
 
 exports.uploadUserPhoto = upload.single('photo');
 
